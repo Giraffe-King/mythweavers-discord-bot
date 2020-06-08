@@ -21,20 +21,86 @@ client.on('message', async msg =>
 	if(command === 'getname')
 	{
 		const id = parseInt(args[0]);
-		console.log('Fetching name from sheet #'+id);
-		var response = (await axios.get(sheetUrl+id)).data;
-		if (response.error)
+		var response = await GetSheet(id);
+		if (response === -1)
 		{
-			msg.reply('There was an error');
 			return;
 		}
-		var sheet = response.sheetdata;
-		var name = sheet.data.name;
+		var sheet = response.data;
+		var name = sheet.name;
 		msg.reply("The name of this character is: " + name);
 		return;
 	}
+	if(command === 'listweapons')
+	{
+		// WIP
+		const id = parseInt(args[0]);
+		var response = await GetSheet(id);
+		if (response === -1)
+		{
+			return;
+		}
+		var sheet = response.data;
+		var name = sheet.name;
+
+		var weapons = [];
+		var weapon1 = [
+			attack = sheet.weapon_1_attack,
+			damage = sheet.weapon_1_dmg,
+			name = sheet.weapon_1_name,
+			slot = 1
+		];
+		var weapon2 = [
+			attack = sheet.weapon_2_attack,
+			damage = sheet.weapon_2_dmg,
+			name = sheet.weapon_2_name,
+			slot = 2
+		];
+		var weapon3 = [
+			attack = sheet.weapon_3_attack,
+			damage = sheet.weapon_3_dmg,
+			name = sheet.weapon_3_name,
+			slot = 3
+		];
+		var weapon4 = [
+			attack = sheet.weapon_4_attack,
+			damage = sheet.weapon_4_dmg,
+			name = sheet.weapon_4_name,
+			slot = 4
+		];
+		var weapon5 = [
+			attack = sheet.weapon_5_attack,
+			damage = sheet.weapon_5_dmg,
+			name = sheet.weapon_5_name,
+			slot = 5
+		];
+
+		weapons.push(weapon1);
+		weapons.push(weapon2);
+		weapons.push(weapon3);
+		weapons.push(weapon4);
+		weapons.push(weapon5);
+
+		var response = `${name}'s weapons are:`
+		weapons.forEach(weapon => {
+			response += `\n${weapon.slot}: ${weapon.name} - ${weapon.attack} to hit for ${weapon.damage} damage`
+		});
+		msg.reply(response);
+	}
 	
 });
+
+async function GetSheet(id)
+{
+	console.log('Fetching name from sheet #'+id);
+	var response = (await axios.get(sheetUrl+id)).data;
+	if (response.error)
+	{
+		msg.reply('There was an error');
+		return -1;
+	}
+	return response.sheetdata;
+}
 
 
 // At least we can login!
