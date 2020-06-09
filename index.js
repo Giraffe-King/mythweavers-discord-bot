@@ -1,21 +1,22 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const axios = require('axios');
+const config = require("./config.json");
 
-const prefix = '!mws-'
-const sheetUrl = 'https://www.myth-weavers.com/api/v1/sheets/sheets/'
 
 client.on('ready', () => {
- console.log(`Logged in as ${client.user.tag}!`);
- });
+	console.log(`Logged in as ${client.user.tag}!`);
+});
 
-client.login('token');
+client.login(config.token);
 
 client.on('message', async msg => 
 {
-	if(!msg.content.startsWith(prefix))
+	console.log('My prefix is: ' + config.prefix);
+	console.log('Msg Text was: ' + msg.content)
+	if(!msg.content.startsWith(config.prefix))
 		return;
-	const args = msg.content.slice(prefix.length).trim().split(/ +/g);
+	const args = msg.content.slice(config.prefix.length).trim().split(/ +/g);
 	const command = args.shift().toLowerCase();
 
 	if(command === 'getname')
@@ -44,42 +45,44 @@ client.on('message', async msg =>
 		var name = sheet.name;
 
 		var weapons = [];
-		var weapon1 = [
-			attack = sheet.weapon_1_attack,
-			damage = sheet.weapon_1_dmg,
-			name = sheet.weapon_1_name,
-			slot = 1
-		];
-		var weapon2 = [
-			attack = sheet.weapon_2_attack,
-			damage = sheet.weapon_2_dmg,
-			name = sheet.weapon_2_name,
-			slot = 2
-		];
-		var weapon3 = [
-			attack = sheet.weapon_3_attack,
-			damage = sheet.weapon_3_dmg,
-			name = sheet.weapon_3_name,
-			slot = 3
-		];
-		var weapon4 = [
-			attack = sheet.weapon_4_attack,
-			damage = sheet.weapon_4_dmg,
-			name = sheet.weapon_4_name,
-			slot = 4
-		];
-		var weapon5 = [
-			attack = sheet.weapon_5_attack,
-			damage = sheet.weapon_5_dmg,
-			name = sheet.weapon_5_name,
-			slot = 5
-		];
+		var weapon1 = {
+			"attack" : sheet.weapon_1_attack,
+			"damage" : sheet.weapon_1_dmg,
+			"name" : sheet.weapon_1_name,
+			"slot" : 1
+		};
+		var weapon2 = {
+			"attack" : sheet.weapon_2_attack,
+			"damage" : sheet.weapon_2_dmg,
+			"name" : sheet.weapon_2_name,
+			"slot" : 2
+		};
+		var weapon3 = {
+			"attack" : sheet.weapon_3_attack,
+			"damage" : sheet.weapon_3_dmg,
+			"name" : sheet.weapon_3_name,
+			"slot" : 3
+		};
+		var weapon4 = {
+			"attack" : sheet.weapon_4_attack,
+			"damage" : sheet.weapon_4_dmg,
+			"name" : sheet.weapon_4_name,
+			"slot" : 4
+		};
+		var weapon5 = {
+			"attack" : sheet.weapon_5_attack,
+			"damage" : sheet.weapon_5_dmg,
+			"name" : sheet.weapon_5_name,
+			"slot" : 5
+		};
 
 		weapons.push(weapon1);
 		weapons.push(weapon2);
 		weapons.push(weapon3);
 		weapons.push(weapon4);
 		weapons.push(weapon5);
+
+		console.log(JSON.stringify(weapons));
 
 		var response = `${name}'s weapons are:`
 		weapons.forEach(weapon => {
@@ -93,7 +96,7 @@ client.on('message', async msg =>
 async function GetSheet(id)
 {
 	console.log('Fetching name from sheet #'+id);
-	var response = (await axios.get(sheetUrl+id)).data;
+	var response = (await axios.get(config.sheetUrl+id)).data;
 	if (response.error)
 	{
 		msg.reply('There was an error');

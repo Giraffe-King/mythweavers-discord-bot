@@ -1,0 +1,5 @@
+{
+    "token"  : "token",
+    "prefix" : "!mws-",
+    "sheetUrl" : "https://www.myth-weavers.com/api/v1/sheets/sheets/"
+}
