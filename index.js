@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const axios = require('axios');
 const config = require("./config.json");
+const { parse, roll, parseAndRoll, Roll } = require('roll-parser');
 
 
 const knownCommands = [
@@ -38,36 +39,117 @@ client.on('message', async msg => {
 	}
 	if(command === 'listweapons')
 	{
-		await ListWeapons(args, msg)
+		await ListWeapons(args, msg);
+		return;
+	}
+	if (command === 'attack')
+	{
+		await AttackWithWeapon(args, msg);
 		return;
 	}
 
 	
 });
 
+async function AttackWithWeapon(args, msg) {
+	const id = parseInt(args[0]);
+	var sheetBlog = await GetSheet(id);
+	if (sheetBlog === -1)
+	{
+		return;
+	}
+	var sheet = sheetBlog.data;
+	var name = sheet.name;
+
+	var weaponSlot = parseInt(args[1]);
+	if (weaponSlot == NaN)
+		weaponSlot = 1;
+	weaponSlot--;
+	var weapons = await GetWeapons(sheet);
+	var weapon = weapons[weaponSlot];
+	var attackBonus = parseInt(weapon.attack);
+	if (attackBonus == NaN) {
+		msg.reply('Could not parse the bonus to hit, found: ' + weapon.attack);
+		return;
+	}
+	var attackToHit =  parseAndRoll('d20+' + attackBonus);
+	var dmg = parseAndRoll(weapon.damage);
+
+	var reply = name + ' attacks with ' + weapon.name + ', rolling ';
+	if (attackToHit != null)
+	{
+		reply += attackToHit + ' to hit'
+	}
+	if (attackToHit != null && dmg != null)
+	{
+		reply += ' for '
+	}
+	if (dmg != null)
+	{
+		reply += dmg + ' damage'
+	}
+
+	msg.reply(reply + '!');
+}
+
 async function GetName(args, msg) {
 	const id = parseInt(args[0]);
-		var response = await GetSheet(id);
-		if (response === -1)
-		{
-			return;
-		}
-		var sheet = response.data;
-		var name = sheet.name;
-		msg.reply("The name of this character is: " + name);
+	var sheetBlog = await GetSheet(id);
+	if (sheetBlog === -1)
+	{
+		return;
+	}
+	var sheet = sheetBlog.data;
+	var name = sheet.name;
+	msg.reply("The name of this character is: " + name);
 }
 
 async function ListWeapons(args, msg) {
 	// WIP
 	const id = parseInt(args[0]);
-	var response = await GetSheet(id);
-	if (response === -1)
+	var sheetBlob = await GetSheet(id);
+	if (sheetBlob === -1)
 	{
 		return;
 	}
-	var sheet = response.data;
+	var sheet = sheetBlob.data;
 	var name = sheet.name;
 
+	var weapons = GetWeapons(sheet);
+
+	var reply = `${name}'s weapons are:`
+	weapons.forEach(weapon => {
+		reply += `\n${weapon.slot}: ${weapon.name} - ${weapon.attack} to hit for ${weapon.damage} damage`
+	});
+	msg.reply(reply);
+}
+
+async function ListCommands(msg) {
+	var reply = 'The commands I know are: ';
+		knownCommands.forEach((a) => {
+			reply += '\n ' + a;			
+		});
+		msg.reply(reply);
+		return;
+}
+
+async function GetSheet(id) {
+	try {
+		console.log('Fetching name from sheet #'+id);
+		var sheetBlob = (await axios.get(config.sheetUrl+id)).data;
+		if (sheetBlob.error) {
+			msg.reply('There was an error');
+			return -1;
+		}
+		return sheetBlob.sheetdata;
+	}
+	catch(e){
+		msg.reply('Unable to load sheet; check the ID and try again.');
+		return -1;		
+	}
+}
+
+async function GetWeapons(sheet) {
 	var weapons = [];
 	var weapon1 = {
 		"attack" : sheet.weapon_1_attack,
@@ -105,32 +187,7 @@ async function ListWeapons(args, msg) {
 	weapons.push(weapon3);
 	weapons.push(weapon4);
 	weapons.push(weapon5);
-
-	var response = `${name}'s weapons are:`
-	weapons.forEach(weapon => {
-		response += `\n${weapon.slot}: ${weapon.name} - ${weapon.attack} to hit for ${weapon.damage} damage`
-	});
-	msg.reply(response);
-}
-
-async function ListCommands(msg) {
-	var response = 'The commands I know are: ';
-		knownCommands.forEach((a) => {
-			response += '\n ' + a;			
-		});
-		msg.reply(response);
-		return;
-}
-
-async function GetSheet(id) {
-	console.log('Fetching name from sheet #'+id);
-	var response = (await axios.get(config.sheetUrl+id)).data;
-	if (response.error)
-	{
-		msg.reply('There was an error');
-		return -1;
-	}
-	return response.sheetdata;
+	return weapons;
 }
 
 // nodemon --inspect index.js
