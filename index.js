@@ -10,13 +10,12 @@ const userSheetIds = new Keyv();
 var characterSheet = new Object();
 
 const skills = {
-	strength : ['athletics'],
-	dexterity : ['acrobatics', 'sleight_of_hand', 'stealth'],
-	intelligence : ['arcana', 'history', 'investigation', 'nature', 'religion'],
-	wisdom : ['animal_handling', 'insight', 'medicine', 'perception', 'survival'],
-	charisma : ['deception', 'intimidation', 'performance', 'persuasion'],
+	strength: ['athletics'],
+	dexterity: ['acrobatics', 'sleight_of_hand', 'stealth'],
+	intelligence: ['arcana', 'history', 'investigation', 'nature', 'religion'],
+	wisdom: ['animal_handling', 'insight', 'medicine', 'perception', 'survival'],
+	charisma: ['deception', 'intimidation', 'performance', 'persuasion'],
 }
-
 const knownCommands = [
 	setid = '**setid** [sheetid] | *sets which myth-weavers sheet to use*',
 	getname = '**getname** | *returns character\'s name*',
@@ -26,6 +25,8 @@ const knownCommands = [
 	whoami = '**whoami** | *lists basic information about the character*',
 	listskills = '**listskills** | *lists all skills and their modifiers*',
 	rollskill = '**rollskill** [skill] | *rolls the given skill check*',
+	rollsave = '**rollsave** [save] | *rolls the given saving throw*',
+	rollinit = '**rollinit** | *rolls initiative*'
 ]
 
 
@@ -90,7 +91,44 @@ client.on('message', async msg => {
 		await RollSkill(args, msg);
 		return;
 	}
+	if (command === 'rollsave') {
+		await RollSave(args, msg);
+		return;
+	}
+	if (command === 'rollinit') {
+		await RollInit(args, msg);
+		return;
+	}
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function RollInit(args, msg) {
+	var result = parseAndRoll('d20+' + characterSheet.initiative).value;
+	msg.reply(characterSheet.name + ' rolled ' + result + ' on initiative.');
+}
+
+async function RollSave(args, msg) {
+	var saveType = args[0];
+	if (saveType == 'str') saveType = 'strength';
+	if (saveType == 'dex') saveType = 'dexterity';
+	if (saveType == 'con') saveType = 'constitution';
+	if (saveType == 'int') saveType = 'intelligence';
+	if (saveType == 'wis') saveType = 'wisdom';
+	if (saveType == 'cha') saveType = 'charisma';
+	var result = parseAndRoll('d20+' + characterSheet[saveType + '_save']).value;
+	msg.reply(characterSheet.name + ' rolled ' + result + ' on their ' + saveType + ' save.');
+}
 
 async function ListSkills(args, msg) {
 	var reply = '';
