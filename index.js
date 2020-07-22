@@ -15,7 +15,7 @@ const knownCommands = [
 	listweapons = 'listweapons',
 	listspells = 'listspells level?',
 	attack = 'attack weaponslot',
-
+	whoami = 'whoami',
 ]
 
 
@@ -68,7 +68,18 @@ client.on('message', async msg => {
 		await ListSpells(args, msg);
 		return;
 	}
+	if (command === 'whoami') {
+		await WhoAmI(args, msg);
+		return;
+	}
 });
+
+async function WhoAmI(args, msg) {
+	var reply = 'You are ';
+	reply += characterSheet.name + ', ';
+	reply += 'a level ' + characterSheet.level + ' ' + characterSheet.race + ' ' + characterSheet.class + '.';
+	msg.reply(reply);
+}
 
 async function ListSpells(args, msg) {
 	var reply = '';
