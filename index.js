@@ -9,6 +9,14 @@ const userSheetIds = new Keyv();
 
 var characterSheet = new Object();
 
+const skills = {
+	strength : ['athletics'],
+	dexterity : ['acrobatics', 'sleight_of_hand', 'stealth'],
+	intelligence : ['arcana', 'history', 'investigation', 'nature', 'religion'],
+	wisdom : ['animal_handling', 'insight', 'medicine', 'perception', 'survival'],
+	charisma : ['deception', 'intimidation', 'performance', 'persuasion'],
+}
+
 const knownCommands = [
 	setid = 'setid sheetid',
 	getname = 'getname',
@@ -16,6 +24,8 @@ const knownCommands = [
 	listspells = 'listspells level?',
 	attack = 'attack weaponslot',
 	whoami = 'whoami',
+	listskills = 'listskills',
+	rollskill = 'rollskill skill'
 ]
 
 
@@ -72,7 +82,54 @@ client.on('message', async msg => {
 		await WhoAmI(args, msg);
 		return;
 	}
+	if (command === 'listskills') {
+		await ListSkills(args, msg);
+		return;
+	}
+	if (command === 'rollskill') {
+		await RollSkill(args, msg);
+		return;
+	}
 });
+
+async function ListSkills(args, msg) {
+	var reply = '';
+	for (var attribute in skills) {
+		var skillList = skills[attribute];
+		reply += '\n **' + attribute.charAt(0).toUpperCase() + attribute.slice(1) + '**';
+		skillList.forEach(skill => {
+			var bonus = characterSheet[skill + '_mod'];
+			if (!bonus.startsWith('-')) {
+				bonus = '+' + bonus;
+			}
+			skill = skill.split('_').join(' ');
+			reply += '\n' + skill.charAt(0).toUpperCase() + skill.slice(1) + ': ' + bonus;
+		})
+	}
+	msg.reply(reply);
+}
+
+async function RollSkill(args, msg) {
+	var skill = args[0];
+	if (skill == 'sleight') {
+		skill = 'sleight_of_hand';
+	}
+	if (skill == 'animal') {
+		skill = 'animal_handling';
+	}
+	var bonus = characterSheet[skill + '_mod'];
+	if (bonus == undefined) {
+		msg.reply('Could not find skill named ' + skill);
+	}
+	bonus = parseInt(bonus);
+
+	var result = parseAndRoll('d20+' + bonus).value;
+
+	skill = skill.split('_').join(' ');
+	var reply = characterSheet.name + ' rolled ' + result + ' on '
+		+ skill.charAt(0).toUpperCase() + skill.slice(1);
+	msg.reply(reply);
+}
 
 async function WhoAmI(args, msg) {
 	var reply = 'You are ';
@@ -122,8 +179,10 @@ async function WhoAmI(args, msg) {
 async function ListSpells(args, msg) {
 	var reply = '';
 	var spellLevel = args.length > 0 ? parseInt(args[0]) : 10;
-	if (spellLevel == NaN)
+	if (spellLevel == NaN) {
 		msg.reply('Got ' + args[0] + ' as spell level, but I don\'t understand what that means.');
+		return;
+	}
 
 	var spells = await GetSpells(spellLevel);
 	spells.forEach(spell => {
@@ -164,8 +223,8 @@ async function AttackWithWeapon(args, msg) {
 		msg.reply('Could not parse the bonus to hit, found: ' + weapon.attack);
 		return;
 	}
-	var attackToHit = parseAndRoll('d20+' + attackBonus);
-	var dmg = parseAndRoll(weapon.damage);
+	var attackToHit = parseAndRoll('d20+' + attackBonus).value;
+	var dmg = parseAndRoll(weapon.damage).value;
 
 	var reply = name + ' attacks with ' + weapon.name;
 
@@ -281,7 +340,7 @@ async function GetSpells(level) {
 			}
 		}
 	}
-	if (level == 10) {
+	if (level >= 10) {
 		for (var spellLevel = 0; spellLevel <= 9; spellLevel++)
 			for (var i = 1; i <= 7; i++) {
 				var spellName = characterSheet['spell_' + spellLevel + '_' + i];
