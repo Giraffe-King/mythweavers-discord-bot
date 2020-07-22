@@ -26,7 +26,8 @@ const knownCommands = [
 	listskills = '**listskills** | *lists all skills and their modifiers*',
 	rollskill = '**rollskill** [skill] | *rolls the given skill check*',
 	rollsave = '**rollsave** [save] | *rolls the given saving throw*',
-	rollinit = '**rollinit** | *rolls initiative*'
+	rollinit = '**rollinit** | *rolls initiative*',
+	languages = '**languages** | *returns known languages*',
 ]
 
 
@@ -99,6 +100,10 @@ client.on('message', async msg => {
 		await RollInit(args, msg);
 		return;
 	}
+	if (command === 'languages') {
+		await GetLanguages(args, msg);
+		return;
+	}
 });
 
 
@@ -110,8 +115,16 @@ client.on('message', async msg => {
 
 
 
-
-
+async function GetLanguages(args, msg) {
+	var reply = characterSheet.name + ' knows: ';
+	for (var i = 1; i <= 18; i++) {
+		var lang = characterSheet['language_' + i];
+		if (lang != undefined) {
+			reply += lang + ', '
+		}
+	}
+	msg.reply(reply);
+}
 
 async function RollInit(args, msg) {
 	var result = parseAndRoll('d20+' + characterSheet.initiative).value;
