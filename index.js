@@ -18,14 +18,14 @@ const skills = {
 }
 
 const knownCommands = [
-	setid = 'setid sheetid',
-	getname = 'getname',
-	listweapons = 'listweapons',
-	listspells = 'listspells level?',
-	attack = 'attack weaponslot',
-	whoami = 'whoami',
-	listskills = 'listskills',
-	rollskill = 'rollskill skill'
+	setid = '**setid** [sheetid] | *sets which myth-weavers sheet to use*',
+	getname = '**getname** | *returns character\'s name*',
+	listweapons = '**listweapons** | *lists weapons*',
+	listspells = '**listspells** [level?] | *lists spells with optional level filter*',
+	attack = '**attack** [weaponslot?] | *makes an attack with the weapon in the chosen slot or first slot*',
+	whoami = '**whoami** | *lists basic information about the character*',
+	listskills = '**listskills** | *lists all skills and their modifiers*',
+	rollskill = '**rollskill** [skill] | *rolls the given skill check*',
 ]
 
 
