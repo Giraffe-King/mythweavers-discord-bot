@@ -3,12 +3,17 @@ const client = new Discord.Client();
 const axios = require('axios');
 const config = require("./config.json");
 const { parse, roll, parseAndRoll, Roll } = require('roll-parser');
+const Keyv = require('keyv');
 
+const userSheetIds = new Keyv();
+
+var characterSheet = new Object();
 
 const knownCommands = [
-	getname = 'getname sheetid',
-	listweapons = 'listweapons sheetid',
-	attack = 'attack sheetid, weaponslot',	
+	setid = 'setid sheetid',
+	getname = 'getname',
+	listweapons = 'listweapons',
+	attack = 'attack weaponslot',
 ]
 
 
@@ -19,73 +24,82 @@ client.on('ready', () => {
 client.login(config.token);
 
 client.on('message', async msg => {
-	if(!msg.content.startsWith(config.prefix))
+	if (!msg.content.startsWith(config.prefix))
 		return;
 	console.log('Msg Text was: ' + msg.content);
 
 	const args = msg.content.slice(config.prefix.length).trim().split(/ +/g);
 	const command = args.shift().toLowerCase();
 
-	if (command === 'commands')
-	{
+	// Sheet not needed
+	if (command === 'setid') {
+		SetId(args, msg);
+		return;
+	}
+
+	if (command === 'commands') {
 		ListCommands(msg);
 		return;
 	}
 
-	if(command === 'getname')
-	{
+	// Sheet needed
+	characterSheet = await userSheetIds.get(msg.author.id);
+	if (characterSheet == undefined) {
+		msg.reply('Sheet not set up, please use the setid command to set up your sheet.');
+		return;
+	}
+
+	if (command === 'getname') {
 		GetName(args, msg);
 		return;
 	}
-	if(command === 'listweapons')
-	{
+	if (command === 'listweapons') {
 		await ListWeapons(args, msg);
 		return;
 	}
-	if (command === 'attack')
-	{
+	if (command === 'attack') {
 		await AttackWithWeapon(args, msg);
 		return;
 	}
-
-	
 });
 
-async function AttackWithWeapon(args, msg) {
+async function SetId(args, msg) {
 	const id = parseInt(args[0]);
-	var sheetBlog = await GetSheet(id);
-	if (sheetBlog === -1)
-	{
+	var sheetBlog = await GetSheet(msg, id);
+	if (sheetBlog === -1) {
 		return;
 	}
 	var sheet = sheetBlog.data;
-	var name = sheet.name;
 
-	var weaponSlot = parseInt(args[1]);
+	userSheetIds.set(msg.author.id, sheet);
+	msg.reply('Your sheet id has been set to ' + id);
+}
+
+async function AttackWithWeapon(args, msg) {
+	var name = characterSheet.name;
+
+	var weaponSlot = parseInt(args[0]);
 	if (weaponSlot == NaN)
 		weaponSlot = 1;
 	weaponSlot--;
-	var weapons = await GetWeapons(sheet);
+	var weapons = await GetWeapons();
 	var weapon = weapons[weaponSlot];
 	var attackBonus = parseInt(weapon.attack);
 	if (attackBonus == NaN) {
 		msg.reply('Could not parse the bonus to hit, found: ' + weapon.attack);
 		return;
 	}
-	var attackToHit =  parseAndRoll('d20+' + attackBonus);
+	var attackToHit = parseAndRoll('d20+' + attackBonus);
 	var dmg = parseAndRoll(weapon.damage);
 
 	var reply = name + ' attacks with ' + weapon.name + ', rolling ';
-	if (attackToHit != null)
-	{
+	if (attackToHit != null) {
 		reply += attackToHit + ' to hit'
 	}
-	if (attackToHit != null && dmg != null)
-	{
+	if (attackToHit != null && dmg != null) {
 		reply += ' for '
 	}
-	if (dmg != null)
-	{
+	if (dmg != null) {
 		reply += dmg + ' damage'
 	}
 
@@ -93,29 +107,14 @@ async function AttackWithWeapon(args, msg) {
 }
 
 async function GetName(args, msg) {
-	const id = parseInt(args[0]);
-	var sheetBlog = await GetSheet(id);
-	if (sheetBlog === -1)
-	{
-		return;
-	}
-	var sheet = sheetBlog.data;
-	var name = sheet.name;
+	var name = characterSheet.name;
 	msg.reply("The name of this character is: " + name);
 }
 
 async function ListWeapons(args, msg) {
-	// WIP
-	const id = parseInt(args[0]);
-	var sheetBlob = await GetSheet(id);
-	if (sheetBlob === -1)
-	{
-		return;
-	}
-	var sheet = sheetBlob.data;
-	var name = sheet.name;
+	var name = characterSheet.name;
 
-	var weapons = GetWeapons(sheet);
+	var weapons = await GetWeapons();
 
 	var reply = `${name}'s weapons are:`
 	weapons.forEach(weapon => {
@@ -126,60 +125,59 @@ async function ListWeapons(args, msg) {
 
 async function ListCommands(msg) {
 	var reply = 'The commands I know are: ';
-		knownCommands.forEach((a) => {
-			reply += '\n ' + a;			
-		});
-		msg.reply(reply);
-		return;
+	knownCommands.forEach((a) => {
+		reply += '\n ' + a;
+	});
+	msg.reply(reply);
+	return;
 }
 
-async function GetSheet(id) {
+async function GetSheet(msg, id) {
 	try {
-		console.log('Fetching name from sheet #'+id);
-		var sheetBlob = (await axios.get(config.sheetUrl+id)).data;
+		var sheetBlob = (await axios.get(config.sheetUrl + id)).data;
 		if (sheetBlob.error) {
 			msg.reply('There was an error');
 			return -1;
 		}
 		return sheetBlob.sheetdata;
 	}
-	catch(e){
+	catch (e) {
 		msg.reply('Unable to load sheet; check the ID and try again.');
-		return -1;		
+		return -1;
 	}
 }
 
-async function GetWeapons(sheet) {
+async function GetWeapons() {
 	var weapons = [];
 	var weapon1 = {
-		"attack" : sheet.weapon_1_attack,
-		"damage" : sheet.weapon_1_dmg,
-		"name" : sheet.weapon_1_name,
-		"slot" : 1
+		"attack": characterSheet.weapon_1_attack,
+		"damage": characterSheet.weapon_1_dmg,
+		"name": characterSheet.weapon_1_name,
+		"slot": 1
 	};
 	var weapon2 = {
-		"attack" : sheet.weapon_2_attack,
-		"damage" : sheet.weapon_2_dmg,
-		"name" : sheet.weapon_2_name,
-		"slot" : 2
+		"attack": characterSheet.weapon_2_attack,
+		"damage": characterSheet.weapon_2_dmg,
+		"name": characterSheet.weapon_2_name,
+		"slot": 2
 	};
 	var weapon3 = {
-		"attack" : sheet.weapon_3_attack,
-		"damage" : sheet.weapon_3_dmg,
-		"name" : sheet.weapon_3_name,
-		"slot" : 3
+		"attack": characterSheet.weapon_3_attack,
+		"damage": characterSheet.weapon_3_dmg,
+		"name": characterSheet.weapon_3_name,
+		"slot": 3
 	};
 	var weapon4 = {
-		"attack" : sheet.weapon_4_attack,
-		"damage" : sheet.weapon_4_dmg,
-		"name" : sheet.weapon_4_name,
-		"slot" : 4
+		"attack": characterSheet.weapon_4_attack,
+		"damage": characterSheet.weapon_4_dmg,
+		"name": characterSheet.weapon_4_name,
+		"slot": 4
 	};
 	var weapon5 = {
-		"attack" : sheet.weapon_5_attack,
-		"damage" : sheet.weapon_5_dmg,
-		"name" : sheet.weapon_5_name,
-		"slot" : 5
+		"attack": characterSheet.weapon_5_attack,
+		"damage": characterSheet.weapon_5_dmg,
+		"name": characterSheet.weapon_5_name,
+		"slot": 5
 	};
 
 	weapons.push(weapon1);
@@ -190,6 +188,7 @@ async function GetWeapons(sheet) {
 	return weapons;
 }
 
+// to run
 // nodemon --inspect index.js
 
 
