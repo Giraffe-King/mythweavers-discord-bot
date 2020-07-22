@@ -13,12 +13,15 @@ const knownCommands = [
 	setid = 'setid sheetid',
 	getname = 'getname',
 	listweapons = 'listweapons',
+	listspells = 'listspells level?',
 	attack = 'attack weaponslot',
+
 ]
 
 
 client.on('ready', () => {
 	console.log(`Logged in as ${client.user.tag}!`);
+	//!mws setid 1892900
 });
 
 client.login(config.token);
@@ -61,7 +64,30 @@ client.on('message', async msg => {
 		await AttackWithWeapon(args, msg);
 		return;
 	}
+	if (command === 'listspells') {
+		await ListSpells(args, msg);
+		return;
+	}
 });
+
+async function ListSpells(args, msg) {
+	var reply = '';
+	var spellLevel = args.length > 0 ? parseInt(args[0]) : 10;
+	if (spellLevel == NaN)
+		msg.reply('Got ' + args[0] + ' as spell level, but I don\'t understand what that means.');
+
+	var spells = await GetSpells(spellLevel);
+	spells.forEach(spell => {
+		reply += `\n${spell.level}: ${spell.name}`
+	});
+	if (reply.length == 0) {
+		msg.reply('No spells found.');
+	}
+	else {
+		msg.reply(reply);
+	}
+
+}
 
 async function SetId(args, msg) {
 	const id = parseInt(args[0]);
@@ -92,7 +118,14 @@ async function AttackWithWeapon(args, msg) {
 	var attackToHit = parseAndRoll('d20+' + attackBonus);
 	var dmg = parseAndRoll(weapon.damage);
 
-	var reply = name + ' attacks with ' + weapon.name + ', rolling ';
+	var reply = name + ' attacks with ' + weapon.name;
+
+	if (attackToHit == null) {
+		reply += ' [' + weapon.attack + ']';
+	}
+
+	reply += ', rolling '
+
 	if (attackToHit != null) {
 		reply += attackToHit + ' to hit'
 	}
@@ -186,6 +219,30 @@ async function GetWeapons() {
 	weapons.push(weapon4);
 	weapons.push(weapon5);
 	return weapons;
+}
+
+async function GetSpells(level) {
+	var spells = [];
+	if (level >= 0 && level <= 9) {
+		for (var i = 1; i <= 7; i++) {
+			var spellName = characterSheet['spell_' + level + '_' + i];
+			if (spellName != '' && spellName != undefined) {
+				var spell = { "level": level, "name": spellName };
+				spells.push(spell);
+			}
+		}
+	}
+	if (level == 10) {
+		for (var spellLevel = 0; spellLevel <= 9; spellLevel++)
+			for (var i = 1; i <= 7; i++) {
+				var spellName = characterSheet['spell_' + spellLevel + '_' + i];
+				if (spellName != '' && spellName != undefined) {
+					var spell = { "level": spellLevel, "name": spellName };
+					spells.push(spell);
+				}
+			}
+	}
+	return spells;
 }
 
 // to run
