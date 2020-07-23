@@ -29,7 +29,9 @@ const knownCommands = [
 	rollsave = '**rollsave** [save] | *rolls the given saving throw*',
 	rollinit = '**rollinit** | *rolls initiative*',
 	languages = '**languages** | *returns known languages*',
-	getstats = '**getstats** | *returns basics stats; attributes, ac, hp, pp*'
+	getstats = '**getstats** | *returns basics stats; attributes, ac, hp, pp*',
+	inventory = '**inventory** | returns items under \'Equipment\' and your currency',
+	otherprofs = '**otherprofs** | returns other proficiencies'
 ]
 
 
@@ -110,14 +112,53 @@ client.on('message', async msg => {
 		await GetStats(args, msg);
 		return;
 	}
+	if (command === 'inventory') {
+		await GetInventory(args, msg);
+		return;
+	}
+	if (command === 'otherprofs') {
+		await GetOtherProficiencies(args, msg);
+		return;
+	}
 });
 
 
 
 
+async function GetInventory(args, msg) {
+	var reply = '**' + characterSheet.name + '** has: ';
+	var any = false;
+	for (var i = 1; i <= 20; i++) {
+		var item = characterSheet['equip' + i + '_'];
+		if (item) {
+			any = true;
+			reply += item + ', '
+		}
+	}
+	if (!any) {
+		reply += 'None.'
+	}
+	reply += '\n **PP**: ' + +characterSheet.currency_pp.replace(/,/g, '') + ', **EP**: ' + +characterSheet.currency_ep.replace(/,/g, '') +
+		', **GP**: ' + +characterSheet.currency_gp.replace(/,/g, '') + ', **SP**: ' + +characterSheet.currency_sp.replace(/,/g, '') +
+		', **CP**: ' + +characterSheet.currency_cp.replace(/,/g, '');
+	msg.reply(reply);
+}
 
-
-
+async function GetOtherProficiencies(args, msg) {
+	var reply = 'The other things **' + characterSheet.name + '** is prof in are: ';
+	var any = false;
+	for (var i = 1; i <= 12; i++) {
+		var otherProf = characterSheet['proficiency_' + i];
+		if (otherProf) {
+			any = true;
+			reply += otherProf + ', '
+		}
+	}
+	if (!any) {
+		reply += 'None.'
+	}
+	msg.reply(reply);
+}
 
 async function GetStats(args, msg) {
 	var reply = '**' + characterSheet.name + '**';
@@ -143,7 +184,7 @@ async function GetStats(args, msg) {
 }
 
 async function GetLanguages(args, msg) {
-	var reply = characterSheet.name + ' knows: ';
+	var reply = '**' + characterSheet.name + '** knows: ';
 	for (var i = 1; i <= 18; i++) {
 		var lang = characterSheet['language_' + i];
 		if (lang != undefined) {
@@ -159,7 +200,7 @@ async function RollInit(args, msg) {
 		bonus = '+' + bonus;
 	}
 	var result = parseAndRoll('d20' + bonus).value;
-	msg.reply(characterSheet.name + ' rolled ' + result + ' on initiative.');
+	msg.reply('**' + characterSheet.name + '** rolled ' + result + ' on initiative.');
 }
 
 async function RollSave(args, msg) {
@@ -175,7 +216,7 @@ async function RollSave(args, msg) {
 		bonus = '+' + bonus;
 	}
 	var result = parseAndRoll('d20' + bonus).value;
-	msg.reply(characterSheet.name + ' rolled ' + result + ' on their ' + saveType + ' save.');
+	msg.reply('**' + characterSheet.name + '** rolled ' + result + ' on their ' + saveType + ' save.');
 }
 
 async function ListSkills(args, msg) {
@@ -217,14 +258,13 @@ async function RollSkill(args, msg) {
 	var result = parseAndRoll('d20' + bonus).value;
 
 	skill = skill.split('_').join(' ');
-	var reply = characterSheet.name + ' rolled ' + result + ' on '
+	var reply = '**' + characterSheet.name + '** rolled ' + result + ' on '
 		+ skill.charAt(0).toUpperCase() + skill.slice(1);
 	msg.reply(reply);
 }
 
 async function WhoAmI(args, msg) {
-	var reply = 'You are ';
-	reply += characterSheet.name + ', a';
+	var reply = 'You are **' + characterSheet.name + '**, a';
 	if (characterSheet.alignment != '') {
 		reply += ' ' + characterSheet.alignment;
 	}
@@ -317,7 +357,7 @@ async function AttackWithWeapon(args, msg) {
 		var attackToHit = parseAndRoll('d20' + bonus);
 		var dmg = parseAndRoll(weapon.damage);
 
-		var reply = name + ' attacks with ' + weapon.name;
+		var reply = '**' + name + '** attacks with ' + weapon.name;
 
 		if (attackToHit == null) {
 			reply += ' [' + weapon.attack + ']';
@@ -344,7 +384,7 @@ async function AttackWithWeapon(args, msg) {
 
 async function GetName(args, msg) {
 	var name = characterSheet.name;
-	msg.reply("The name of this character is: " + name);
+	msg.reply("The name of this character is: **" + name + '**');
 }
 
 async function ListWeapons(args, msg) {
@@ -352,7 +392,7 @@ async function ListWeapons(args, msg) {
 
 	var weapons = await GetWeapons();
 
-	var reply = `${name}'s weapons are:`
+	var reply = `**${name}**'s weapons are:`
 	weapons.forEach(weapon => {
 		reply += `\n${weapon.slot}: ${weapon.name} - ${weapon.attack} to hit for ${weapon.damage} damage`
 	});
