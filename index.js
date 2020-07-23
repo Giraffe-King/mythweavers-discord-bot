@@ -372,44 +372,43 @@ async function RollSkill(args, msg) {
 }
 
 async function WhoAmI(args, msg) {
-	var reply = 'You are **' + characterSheet.name + '**, a';
-	if (characterSheet.alignment != '') {
-		reply += ' ' + characterSheet.alignment;
+	var reply = `You are **${characterSheet.name}**, a`;
+	if (characterSheet.alignment) {
+		reply += ` ${characterSheet.alignment}`;
 	}
-	reply += ' level ' + characterSheet.level + ' ' + characterSheet.race + ' '
-		+ characterSheet.class;
-	if (characterSheet.background != '') {
-		reply += ', with the ' + characterSheet.background + ' background.';
+	reply += ` level ${characterSheet.level} ${characterSheet.race} ${characterSheet.class}`;
+	if (characterSheet.background) {
+		reply += `, with the ${characterSheet.background} background.`;
 	}
 	else {
-		reply += '.';
+		reply += `.`;
 	}
 	if (characterSheet.campaign) {
-		reply += ' You are a character in the ' + characterSheet.campaign + ' campaign.';
+		reply += ` You are a character in the ${characterSheet.campaign} campaign.`;
 	}
 	if (characterSheet.gender) {
-		reply += ' Your gender is ' + characterSheet.gender + '.';
+		reply += ` Your gender is ${characterSheet.gender}.`;
 	}
 	if (characterSheet.height) {
-		reply += ' Your height is ' + characterSheet.height + '.';
+		reply += ` Your height is ${characterSheet.height}.`;
 	}
 	if (characterSheet.weight) {
-		reply += ' Your weight  is ' + characterSheet.weight + '.';
+		reply += ` Your weight is ${characterSheet.weight}.`;
 	}
 	if (characterSheet.age) {
-		reply += ' Your age is ' + characterSheet.age + '.';
+		reply += ` Your age is ${characterSheet.age}.`;
 	}
 	if (characterSheet.hair_color) {
-		reply += ' You have ' + characterSheet.hair_color + ' hair.';
+		reply += ` You have ${characterSheet.hair_color} hair.`;
 	}
 	if (characterSheet.skin_color) {
-		reply += ' You have ' + characterSheet.skin_color + ' skin.';
+		reply += ` You have ${characterSheet.skin_color} skin.`;
 	}
 	if (characterSheet.eyes_color) {
-		reply += ' You have ' + characterSheet.eyes_color + ' eyes.';
+		reply += ` You have ${characterSheet.eyes_color} eyes.`;
 	}
 	if (characterSheet.deity) {
-		reply += ' You worship ' + characterSheet.deity + '.';
+		reply += ` You worship ${characterSheet.deity}.`;
 	}
 
 	msg.reply(reply);
