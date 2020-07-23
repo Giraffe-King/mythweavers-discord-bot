@@ -343,7 +343,7 @@ async function SetId(id, msg) {
 	sheetData.id = id;
 
 	userSheetIds.set(msg.author.id, sheetData);
-	msg.reply(`Your sheet id has been set to ${id} [${sheetData.name}]`);
+	msg.reply(`Your sheet id has been set to ${id} [**${sheetData.name}**]`);
 }
 
 async function AttackWithWeapon(args, msg) {
