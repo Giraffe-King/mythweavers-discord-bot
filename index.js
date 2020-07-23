@@ -28,6 +28,9 @@ const knownCommands = [
 	inventory = '**inventory** | returns items under \'Equipment\' and your currency',
 	otherprofs = '**otherprofs** | returns other proficiencies',
 	spell = '**spell** | fetches SRD spell description from <https://www.dnd5eapi.co/>',
+	refresh = '**refresh** | re-fetches data for your sheet to reflect changes made',
+	portraint = '**portrait** | displays your portrait',
+	rollDice = '**roll** [dice] | rolls the given dice',
 ]
 const skills = {
 	strength: ['athletics'],
@@ -58,6 +61,17 @@ client.on('message', async msg => {
 	const command = args.shift().toLowerCase();
 
 	// Sheet not needed
+	if (command === 'help') {
+		msg.reply(`\nTo use this bot, you will have to give it your sheet's ID. This can be found by looking at the URL of your sheet; it will be the numbers at the end.`
+			+ `\ni.e. <https://www.myth-weavers.com/sheet.html#id=XXXXXX> would have an ID of XXXXXX.\nCurrently this bot works for the following types of sheets: ${sheetTypes.join(', ')}`);
+		return;
+	}
+	if (command === 'info') {
+		msg.reply(`\nThis bot was created to help D&D 5e players to use their Myth-Weavers sheets as inputs for commands to quickly perform different actions without having to reference your sheet.`
+			+ `\nBecause this bot cannot log in as you on https://www.myth-weavers.com, it cannot edit your sheets, so any changes you want saved will have to be done manually.`
+		+`\nThis bit's functionality with regards to game mechanics and descriptions is limited to what is available on the SRD so as to not violate OGL`);
+		return;
+	}
 	if (command === 'setid') {
 		SetId(parseInt(args[0]), msg);
 		return;
@@ -70,15 +84,8 @@ client.on('message', async msg => {
 		await GetSpellInfo(args, msg);
 		return;
 	}
-	if (command === 'help') {
-		msg.reply(`\nTo use this bot, you will have to give it your sheet's ID. This can be found by looking at the URL of your sheet; it will be the numbers at the end.`
-			+ `\ni.e. <https://www.myth-weavers.com/sheet.html#id=XXXXXX> would have an ID of XXXXXX.\nCurrently this bot works for the following types of sheets: ${sheetTypes.join(', ')}`);
-		return;
-	}
-	if (command === 'info') {
-		msg.reply(`\nThis bot was created to help D&D 5e players to use their Myth-Weavers sheets as inputs for commands to quickly perform different actions without having to reference your sheet.`
-			+ `\nBecause this bot cannot log in as you on https://www.myth-weavers.com, it cannot edit your sheets, so any changes you want saved will have to be done manually.`
-		+`\nThis bit's functionality with regards to game mechanics and descriptions is limited to what is available on the SRD so as to not violate OGL`);
+	if (command === 'roll') {
+		await RollDice(args, msg);
 		return;
 	}
 
@@ -146,9 +153,25 @@ client.on('message', async msg => {
 		await RefreshSheet(args, msg);
 		return;
 	}
+	if (command === 'portrait') {
+		await DisplayPortrait(args, msg);
+		return;
+	}
 
 	msg.reply(`Command not recognized.`);
 });
+
+async function RollDice(args, msg) {
+	try {
+		msg.reply(`You rolled a ${parseAndRoll(args[0]).value} on ${args[0]}`);
+	} catch {
+		msg.reply(`Could not parse ${args[0]}; format should be XdY+Z`)
+	}
+}
+
+async function DisplayPortrait(args, msg) {
+	msg.reply(characterSheet.character_portrait);
+}
 
 async function GetSpellInfo(args, msg) {
 	var spellName = args.join('-').toLowerCase();
@@ -242,7 +265,7 @@ async function GetStats(args, msg) {
 	reply += '\n **Saving throws:** ';
 	for (var attribute in skills) {
 		var bonus = characterSheet[attribute + '_save'];
-		if (!bonus.startsWith('-')) {
+		if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 			bonus = '+' + bonus;
 		}
 		reply += attribute.charAt(0).toUpperCase() + attribute.charAt(1).toUpperCase() + attribute.charAt(2).toUpperCase() + ' ' + bonus + ', '
@@ -265,7 +288,7 @@ async function GetLanguages(args, msg) {
 
 async function RollInit(args, msg) {
 	var bonus = characterSheet.initiative;
-	if (!bonus.startsWith('-')) {
+	if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 		bonus = '+' + bonus;
 	}
 	var result = parseAndRoll('d20' + bonus).value;
@@ -281,7 +304,7 @@ async function RollSave(args, msg) {
 	if (saveType == 'wis') saveType = 'wisdom';
 	if (saveType == 'cha') saveType = 'charisma';
 	var bonus = characterSheet[saveType + '_save'];
-	if (!bonus.startsWith('-')) {
+	if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 		bonus = '+' + bonus;
 	}
 	var result = parseAndRoll('d20' + bonus).value;
@@ -298,7 +321,7 @@ async function ListSkills(args, msg) {
 		reply += '\n **' + attribute.charAt(0).toUpperCase() + attribute.slice(1) + '**';
 		skillList.forEach(skill => {
 			var bonus = characterSheet[skill + '_mod'];
-			if (!bonus.startsWith('-')) {
+			if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 				bonus = '+' + bonus;
 			}
 			skill = skill.split('_').join(' ');
@@ -320,7 +343,7 @@ async function RollSkill(args, msg) {
 	if (bonus == undefined) {
 		msg.reply('Could not find skill named ' + skill);
 	}
-	if (!bonus.startsWith('-')) {
+	if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 		bonus = '+' + bonus;
 	}
 
@@ -420,7 +443,7 @@ async function AttackWithWeapon(args, msg) {
 		var weapons = await GetWeapons();
 		var weapon = weapons[weaponSlot];
 		var bonus = weapon.attack;
-		if (!bonus.startsWith('-')) {
+		if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 			bonus = '+' + bonus;
 		}
 		var attackToHit = parseAndRoll('d20' + bonus);
