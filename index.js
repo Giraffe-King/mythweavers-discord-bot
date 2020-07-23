@@ -52,7 +52,7 @@ client.on('message', async msg => {
 
 	// Sheet not needed
 	if (command === 'setid') {
-		SetId(args, msg);
+		SetId(parseInt(args[0]), msg);
 		return;
 	}
 
@@ -120,10 +120,16 @@ client.on('message', async msg => {
 		await GetOtherProficiencies(args, msg);
 		return;
 	}
+	if (command === 'refresh') {
+		await RefreshSheet(args, msg);
+		return;
+	}
 });
 
 
-
+async function RefreshSheet(args, msg) {
+	SetId(characterSheet.id, msg);
+}
 
 async function GetInventory(args, msg) {
 	var reply = '**' + characterSheet.name + '** has: ';
@@ -328,16 +334,16 @@ async function ListSpells(args, msg) {
 
 }
 
-async function SetId(args, msg) {
-	const id = parseInt(args[0]);
-	var sheetBlog = await GetSheet(msg, id);
-	if (sheetBlog === -1) {
+async function SetId(id, msg) {
+	var sheetBlob = await GetSheet(msg, id);
+	if (sheetBlob === -1) {
 		return;
 	}
-	var sheet = sheetBlog.data;
+	var sheetData = sheetBlob.data;
+	sheetData.id = id;
 
-	userSheetIds.set(msg.author.id, sheet);
-	msg.reply('Your sheet id has been set to ' + id);
+	userSheetIds.set(msg.author.id, sheetData);
+	msg.reply(`Your sheet id has been set to ${id} [${sheetData.name}]`);
 }
 
 async function AttackWithWeapon(args, msg) {
@@ -378,13 +384,13 @@ async function AttackWithWeapon(args, msg) {
 		msg.reply(reply + '!');
 	}
 	catch {
-		msg.reply('Could not roll an attack for weapon in slot ' + ++weaponSlot + '. Please check the formatting on your sheet.');
+		msg.reply(`Could not roll an attack for weapon in slot ${++weaponSlot}. Please check the formatting on your sheet.`);
 	}
 }
 
 async function GetName(args, msg) {
 	var name = characterSheet.name;
-	msg.reply("The name of this character is: **" + name + '**');
+	msg.reply(`The name of this character is: **${name}**`);
 }
 
 async function ListWeapons(args, msg) {
