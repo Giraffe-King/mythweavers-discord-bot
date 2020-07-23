@@ -223,15 +223,18 @@ async function RefreshSheet(args, msg) {
 async function GetInventory(args, msg) {
 	var reply = '**' + characterSheet.name + '** has: ';
 	var any = false;
+	var items = [];
 	for (var i = 1; i <= 20; i++) {
 		var item = characterSheet['equip' + i + '_'];
 		if (item) {
 			any = true;
-			reply += item + ', '
+			items.push(item);
 		}
 	}
 	if (!any) {
 		reply += 'None.'
+	} else {
+		reply += items.join(', ');
 	}
 
 	reply += `\n **PP**: ${+(characterSheet.currency_pp || '0').replace(/,/g, '')}, **EP**: ${+(characterSheet.currency_ep || '0').replace(/,/g, '')}` +
@@ -314,7 +317,7 @@ async function RollSave(args, msg) {
 	if (saveType == 'int') saveType = 'intelligence';
 	if (saveType == 'wis') saveType = 'wisdom';
 	if (saveType == 'cha') saveType = 'charisma';
-	var bonus = characterSheet[saveType + '_save'];
+	var bonus = characterSheet[saveType + '_save'] || '0';
 	if (!bonus) {
 		msg.reply(`Cannot find save "${args[0]}"`)
 	}
@@ -384,28 +387,28 @@ async function WhoAmI(args, msg) {
 	if (characterSheet.campaign) {
 		reply += ' You are a character in the ' + characterSheet.campaign + ' campaign.';
 	}
-	if (characterSheet.gender != '') {
+	if (characterSheet.gender) {
 		reply += ' Your gender is ' + characterSheet.gender + '.';
 	}
-	if (characterSheet.height != '') {
+	if (characterSheet.height) {
 		reply += ' Your height is ' + characterSheet.height + '.';
 	}
-	if (characterSheet.weight != '') {
+	if (characterSheet.weight) {
 		reply += ' Your weight  is ' + characterSheet.weight + '.';
 	}
-	if (characterSheet.age != '') {
+	if (characterSheet.age) {
 		reply += ' Your age is ' + characterSheet.age + '.';
 	}
-	if (characterSheet.hair_color != '') {
+	if (characterSheet.hair_color) {
 		reply += ' You have ' + characterSheet.hair_color + ' hair.';
 	}
-	if (characterSheet.skin_color != '') {
+	if (characterSheet.skin_color) {
 		reply += ' You have ' + characterSheet.skin_color + ' skin.';
 	}
-	if (characterSheet.eyes_color != '') {
+	if (characterSheet.eyes_color) {
 		reply += ' You have ' + characterSheet.eyes_color + ' eyes.';
 	}
-	if (characterSheet.deity != '') {
+	if (characterSheet.deity) {
 		reply += ' You worship ' + characterSheet.deity + '.';
 	}
 
@@ -436,6 +439,10 @@ async function ListSpells(args, msg) {
 async function SetId(id, msg) {
 	var sheetBlob = await GetSheet(msg, id);
 	if (sheetBlob === -1) {
+		return;
+	}
+	if (sheetBlob.sheet_template.id != 12) {
+		msg.reply(`Unfortunately, the only sheets I can parse are ${sheetTypes.join(', ')}`);
 		return;
 	}
 	var sheetData = sheetBlob.data;
