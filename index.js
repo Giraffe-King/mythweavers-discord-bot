@@ -174,7 +174,7 @@ async function DisplayPortrait(args, msg) {
 }
 
 async function GetSpellInfo(args, msg) {
-	var spellName = args.join('-').toLowerCase();
+	var spellName = args.join('-').toLowerCase().replace(/'/g, '').replace(/,/g, '');
 	var spellBlob;
 	try {
 		spellBlob = (await axios.get(config.apiUrl + 'spells/' + spellName)).data;
@@ -230,14 +230,15 @@ async function GetInventory(args, msg) {
 	if (!any) {
 		reply += 'None.'
 	}
-	reply += '\n **PP**: ' + +characterSheet.currency_pp.replace(/,/g, '') + ', **EP**: ' + +characterSheet.currency_ep.replace(/,/g, '') +
-		', **GP**: ' + +characterSheet.currency_gp.replace(/,/g, '') + ', **SP**: ' + +characterSheet.currency_sp.replace(/,/g, '') +
-		', **CP**: ' + +characterSheet.currency_cp.replace(/,/g, '');
+
+	reply += '\n **PP**: ' + +(characterSheet.currency_pp || '0').replace(/,/g, '') + ', **EP**: ' + +(characterSheet.currency_ep || '0').replace(/,/g, '') +
+		', **GP**: ' + +(characterSheet.currency_gp || '0').replace(/,/g, '') + ', **SP**: ' + +(characterSheet.currency_sp || '0').replace(/,/g, '') +
+		', **CP**: ' + +(characterSheet.currency_cp || '0').replace(/,/g, '');
 	msg.reply(reply);
 }
 
 async function GetOtherProficiencies(args, msg) {
-	var reply = 'The other things **' + characterSheet.name + '** is prof in are: ';
+	var reply = 'The other things **' + characterSheet.name + '** is proficient in are: ';
 	var any = false;
 	for (var i = 1; i <= 12; i++) {
 		var otherProf = characterSheet['proficiency_' + i];
@@ -265,6 +266,8 @@ async function GetStats(args, msg) {
 	reply += '\n **Saving throws:** ';
 	for (var attribute in skills) {
 		var bonus = characterSheet[attribute + '_save'];
+		if (!bonus)
+			bonus = '0';
 		if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 			bonus = '+' + bonus;
 		}
@@ -277,17 +280,19 @@ async function GetStats(args, msg) {
 
 async function GetLanguages(args, msg) {
 	var reply = '**' + characterSheet.name + '** knows: ';
+	var langs = [];
 	for (var i = 1; i <= 18; i++) {
 		var lang = characterSheet['language_' + i];
 		if (lang != undefined) {
-			reply += lang + ', '
+			langs.push(lang);
 		}
 	}
+	reply += langs.join(', ');
 	msg.reply(reply);
 }
 
 async function RollInit(args, msg) {
-	var bonus = characterSheet.initiative;
+	var bonus = characterSheet.initiative || '0';
 	if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 		bonus = '+' + bonus;
 	}
@@ -304,6 +309,9 @@ async function RollSave(args, msg) {
 	if (saveType == 'wis') saveType = 'wisdom';
 	if (saveType == 'cha') saveType = 'charisma';
 	var bonus = characterSheet[saveType + '_save'];
+	if (!bonus) {
+		msg.reply(`Cannot find save "${args[0]}"`)
+	}
 	if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 		bonus = '+' + bonus;
 	}
@@ -320,7 +328,7 @@ async function ListSkills(args, msg) {
 		var skillList = skills[attribute];
 		reply += '\n **' + attribute.charAt(0).toUpperCase() + attribute.slice(1) + '**';
 		skillList.forEach(skill => {
-			var bonus = characterSheet[skill + '_mod'];
+			var bonus = characterSheet[skill + '_mod'] || '0';
 			if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 				bonus = '+' + bonus;
 			}
@@ -559,7 +567,7 @@ async function GetWeapons() {
 async function GetSpells(level) {
 	var spells = [];
 	if (level >= 0 && level <= 9) {
-		for (var i = 1; i <= 7; i++) {
+		for (var i = 0; i <= 14; i++) {
 			var spellName = characterSheet['spell_' + level + '_' + i];
 			if (spellName != '' && spellName != undefined) {
 				var spell = { "level": level, "name": spellName };
@@ -569,7 +577,7 @@ async function GetSpells(level) {
 	}
 	if (level >= 10) {
 		for (var spellLevel = 0; spellLevel <= 9; spellLevel++)
-			for (var i = 1; i <= 7; i++) {
+			for (var i = 0; i <= 14; i++) {
 				var spellName = characterSheet['spell_' + spellLevel + '_' + i];
 				if (spellName != '' && spellName != undefined) {
 					var spell = { "level": spellLevel, "name": spellName };
