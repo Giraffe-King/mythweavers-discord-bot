@@ -44,6 +44,10 @@ client.on('ready', () => {
 client.login(config.token);
 
 client.on('message', async msg => {
+	if (msg.content == config.prefix) {
+		msg.reply(`Hello.\nFor information on the bot, please use the command *!mws info*\nFor a list of commands, please use the command *!mws commands*\nFor help, please use the command *!mws help*`);
+		return;
+	}
 	if (!msg.content.startsWith(config.prefix))
 		return;
 	console.log('Msg Text was: ' + msg.content);
@@ -128,6 +132,8 @@ client.on('message', async msg => {
 		await RefreshSheet(args, msg);
 		return;
 	}
+
+	msg.reply(`Command not recognized.`);
 });
 
 async function GetSpellInfo(args, msg) {
