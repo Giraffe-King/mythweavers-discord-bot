@@ -49,121 +49,124 @@ client.on('ready', () => {
 client.login(config.token);
 
 client.on('message', async msg => {
-	if (msg.content == config.prefix) {
-		msg.reply(`Hello.\nFor information on the bot, please use the command *!mws info*\nFor a list of commands, please use the command *!mws commands*\nFor help, please use the command *!mws help*`);
-		return;
-	}
-	if (!msg.content.startsWith(config.prefix))
-		return;
-	console.log('Msg Text was: ' + msg.content);
+	try {
+		if (msg.content == config.prefix) {
+			msg.reply(`Hello.\nFor information on the bot, please use the command *!mws info*\nFor a list of commands, please use the command *!mws commands*\nFor help, please use the command *!mws help*`);
+			return;
+		}
+		if (!msg.content.startsWith(config.prefix))
+			return;
 
-	const args = msg.content.slice(config.prefix.length).trim().split(/ +/g);
-	const command = args.shift().toLowerCase();
+		const args = msg.content.slice(config.prefix.length).trim().split(/ +/g);
+		const command = args.shift().toLowerCase();
 
-	// Sheet not needed
-	if (command === 'help') {
-		msg.reply(`\nTo use this bot, you will have to give it your sheet's ID. This can be found by looking at the URL of your sheet; it will be the numbers at the end.`
-			+ `\ni.e. <https://www.myth-weavers.com/sheet.html#id=XXXXXX> would have an ID of XXXXXX.\nCurrently this bot works for the following types of sheets: ${sheetTypes.join(', ')}`);
-		return;
-	}
-	if (command === 'info') {
-		msg.reply(`\nThis bot was created to help D&D 5e players to use their Myth-Weavers sheets as inputs for commands to quickly perform different actions without having to reference your sheet.`
-			+ `\nBecause this bot cannot log in as you on https://www.myth-weavers.com, it cannot edit your sheets, so any changes you want saved will have to be done manually.`
-		+`\nThis bit's functionality with regards to game mechanics and descriptions is limited to what is available on the SRD so as to not violate OGL`);
-		return;
-	}
-	if (command === 'setid') {
-		SetId(parseInt(args[0]), msg);
-		return;
-	}
-	if (command === 'commands') {
-		ListCommands(msg);
-		return;
-	}
-	if (command === 'spell') {
-		await GetSpellInfo(args, msg);
-		return;
-	}
-	if (command === 'roll') {
-		await RollDice(args, msg);
-		return;
-	}
+		// Sheet not needed
+		if (command === 'help') {
+			msg.reply(`\nTo use this bot, you will have to give it your sheet's ID. This can be found by looking at the URL of your sheet; it will be the numbers at the end.`
+				+ `\ni.e. <https://www.myth-weavers.com/sheet.html#id=XXXXXX> would have an ID of XXXXXX.\nCurrently this bot works for the following types of sheets: ${sheetTypes.join(', ')}`);
+			return;
+		}
+		if (command === 'info') {
+			msg.reply(`\nThis bot was created to help D&D 5e players to use their Myth-Weavers sheets as inputs for commands to quickly perform different actions without having to reference your sheet.`
+				+ `\nBecause this bot cannot log in as you on https://www.myth-weavers.com, it cannot edit your sheets, so any changes you want saved will have to be done manually.`
+				+ `\nThis bit's functionality with regards to game mechanics and descriptions is limited to what is available on the SRD so as to not violate OGL`);
+			return;
+		}
+		if (command === 'setid') {
+			SetId(parseInt(args[0]), msg);
+			return;
+		}
+		if (command === 'commands') {
+			ListCommands(msg);
+			return;
+		}
+		if (command === 'spell') {
+			await GetSpellInfo(args, msg);
+			return;
+		}
+		if (command === 'roll') {
+			await RollDice(args, msg);
+			return;
+		}
 
 
-	// Sheet needed
-	characterSheet = await userSheetIds.get(msg.author.id);
-	if (characterSheet == undefined) {
-		msg.reply('Sheet not set up, please use the setid command to set up your sheet.');
-		return;
-	}
+		// Sheet needed
+		characterSheet = await userSheetIds.get(msg.author.id);
+		if (characterSheet == undefined) {
+			msg.reply('Sheet not set up, please use the setid command to set up your sheet.');
+			return;
+		}
 
-	if (command === 'getname') {
-		GetName(args, msg);
-		return;
-	}
-	if (command === 'listweapons') {
-		await ListWeapons(args, msg);
-		return;
-	}
-	if (command === 'attack') {
-		await AttackWithWeapon(args, msg);
-		return;
-	}
-	if (command === 'listspells') {
-		await ListSpells(args, msg);
-		return;
-	}
-	if (command === 'whoami') {
-		await WhoAmI(args, msg);
-		return;
-	}
-	if (command === 'listskills') {
-		await ListSkills(args, msg);
-		return;
-	}
-	if (command === 'rollskill') {
-		await RollSkill(args, msg);
-		return;
-	}
-	if (command === 'rollsave') {
-		await RollSave(args, msg);
-		return;
-	}
-	if (command === 'rollinit') {
-		await RollInit(args, msg);
-		return;
-	}
-	if (command === 'languages') {
-		await GetLanguages(args, msg);
-		return;
-	}
-	if (command === 'getstats') {
-		await GetStats(args, msg);
-		return;
-	}
-	if (command === 'inventory') {
-		await GetInventory(args, msg);
-		return;
-	}
-	if (command === 'otherprofs') {
-		await GetOtherProficiencies(args, msg);
-		return;
-	}
-	if (command === 'refresh') {
-		await RefreshSheet(args, msg);
-		return;
-	}
-	if (command === 'portrait') {
-		await DisplayPortrait(args, msg);
-		return;
-	}
+		if (command === 'getname') {
+			GetName(args, msg);
+			return;
+		}
+		if (command === 'listweapons') {
+			await ListWeapons(args, msg);
+			return;
+		}
+		if (command === 'attack') {
+			await AttackWithWeapon(args, msg);
+			return;
+		}
+		if (command === 'listspells') {
+			await ListSpells(args, msg);
+			return;
+		}
+		if (command === 'whoami') {
+			await WhoAmI(args, msg);
+			return;
+		}
+		if (command === 'listskills') {
+			await ListSkills(args, msg);
+			return;
+		}
+		if (command === 'rollskill') {
+			await RollSkill(args, msg);
+			return;
+		}
+		if (command === 'rollsave') {
+			await RollSave(args, msg);
+			return;
+		}
+		if (command === 'rollinit') {
+			await RollInit(args, msg);
+			return;
+		}
+		if (command === 'languages') {
+			await GetLanguages(args, msg);
+			return;
+		}
+		if (command === 'getstats') {
+			await GetStats(args, msg);
+			return;
+		}
+		if (command === 'inventory') {
+			await GetInventory(args, msg);
+			return;
+		}
+		if (command === 'otherprofs') {
+			await GetOtherProficiencies(args, msg);
+			return;
+		}
+		if (command === 'refresh') {
+			await RefreshSheet(args, msg);
+			return;
+		}
+		if (command === 'portrait') {
+			await DisplayPortrait(args, msg);
+			return;
+		}
 
-	msg.reply(`Command not recognized.`);
+		msg.reply(`Command not recognized.`);
+	} catch (e) {
+		console.log(`${msg.author.username}#${msg.author.discriminator} said: ${msg.content} which resulted in ${e}`);
+	}
 });
 
 async function RollDice(args, msg) {
 	try {
-		msg.reply(`You rolled a ${parseAndRoll(args[0]).value} on ${args[0]}`);
+		msg.reply(`You rolled a ${await ParseAndRollWrapper(args[0])} on ${args[0]}`);
 	} catch {
 		msg.reply(`Could not parse ${args[0]}; format should be XdY+Z`)
 	}
@@ -296,7 +299,7 @@ async function RollInit(args, msg) {
 	if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 		bonus = '+' + bonus;
 	}
-	var result = parseAndRoll('d20' + bonus).value;
+	var result = await ParseAndRollWrapper('d20' + bonus);
 	msg.reply('**' + characterSheet.name + '** rolled ' + result + ' on initiative.');
 }
 
@@ -315,7 +318,7 @@ async function RollSave(args, msg) {
 	if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 		bonus = '+' + bonus;
 	}
-	var result = parseAndRoll('d20' + bonus).value;
+	var result = await ParseAndRollWrapper('d20' + bonus);
 	msg.reply('**' + characterSheet.name + '** rolled ' + result + ' on their ' + saveType + ' save.');
 }
 
@@ -355,7 +358,7 @@ async function RollSkill(args, msg) {
 		bonus = '+' + bonus;
 	}
 
-	var result = parseAndRoll('d20' + bonus).value;
+	var result = await ParseAndRollWrapper('d20' + bonus);
 
 	skill = skill.split('_').join(' ');
 	var reply = '**' + characterSheet.name + '** rolled ' + result + ' on '
@@ -454,8 +457,8 @@ async function AttackWithWeapon(args, msg) {
 		if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 			bonus = '+' + bonus;
 		}
-		var attackToHit = parseAndRoll('d20' + bonus);
-		var dmg = parseAndRoll(weapon.damage);
+		var attackToHit = await ParseAndRollWrapper('d20' + bonus);
+		var dmg = await ParseAndRollWrapper(weapon.damage);
 
 		var reply = '**' + name + '** attacks with ' + weapon.name;
 
@@ -466,13 +469,13 @@ async function AttackWithWeapon(args, msg) {
 		reply += ', rolling '
 
 		if (attackToHit != null) {
-			reply += attackToHit.value + ' to hit'
+			reply += attackToHit + ' to hit'
 		}
 		if (attackToHit != null && dmg != null) {
 			reply += ' for '
 		}
 		if (dmg != null) {
-			reply += dmg.value + ' damage'
+			reply += dmg + ' damage'
 		}
 
 		msg.reply(reply + '!');
@@ -586,6 +589,22 @@ async function GetSpells(level) {
 			}
 	}
 	return spells;
+}
+
+async function ParseAndRollWrapper(input) {
+	var sum = null;
+	var listOfRolls = input.split('+');
+	for (set in listOfRolls) {
+		try {
+			var dice = listOfRolls[set];
+			if (dice.includes('d'))
+				sum += +(parseAndRoll(dice).value);
+			if (dice = +dice) {
+				sum += +dice;
+			}
+		} catch {}
+	}
+	return sum;
 }
 
 // to run
