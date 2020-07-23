@@ -31,7 +31,8 @@ const knownCommands = [
 	languages = '**languages** | *returns known languages*',
 	getstats = '**getstats** | *returns basics stats; attributes, ac, hp, pp*',
 	inventory = '**inventory** | returns items under \'Equipment\' and your currency',
-	otherprofs = '**otherprofs** | returns other proficiencies'
+	otherprofs = '**otherprofs** | returns other proficiencies',
+	spell = '**spell** | fetches spell description from https://www.dnd5eapi.co/',
 ]
 
 
@@ -55,9 +56,12 @@ client.on('message', async msg => {
 		SetId(parseInt(args[0]), msg);
 		return;
 	}
-
 	if (command === 'commands') {
 		ListCommands(msg);
+		return;
+	}
+	if (command === 'spell') {
+		await GetSpellInfo(args, msg);
 		return;
 	}
 
@@ -126,6 +130,45 @@ client.on('message', async msg => {
 	}
 });
 
+async function GetSpellInfo(args, msg) {
+	var spellName = args.join('-').toLowerCase();
+	var spellBlob;
+	try {
+		spellBlob = (await axios.get(config.apiUrl + 'spells/' + spellName)).data;
+	} catch {
+		msg.reply('Spell not found; I can only show SRD spells.')
+	}
+	var spellLevel = spellBlob.level;
+	if (spellLevel == 1)
+		spellLevel += 'st';
+	else if (spellLevel == 2)
+		spellLevel += 'nd';
+	else if (spellLevel == 3)
+		spellLevel += '3rd';
+	else
+		spellLevel += 'th';
+
+	var components = spellBlob.components.join(', ');
+	if (spellBlob.material)
+		components += ` (${spellBlob.material})`
+
+	var reply = `**${spellBlob.name}** \n*${spellLevel}-level ${spellBlob.school.name}*\n**Casting Time**: ${spellBlob.casting_time}\n**Range**: ${spellBlob.range}`
+		+ `\n**Components**: ${components}\n**Duration**: ${spellBlob.duration}`;
+	if (spellBlob.concentration) {
+		reply += ` (Concentration)`
+	}
+	reply += `\n${spellBlob.desc}`;
+	if (spellBlob.higher_level) {
+		reply += `\n${spellBlob.higher_level}`
+	}
+	var classes = [];
+	for (castingClass in spellBlob.classes) {
+		classes.push(spellBlob.classes[castingClass].name);
+	}
+	reply += `\n**Classes**: ${classes.join(', ')}`;
+
+	msg.reply(reply);
+}
 
 async function RefreshSheet(args, msg) {
 	SetId(characterSheet.id, msg);

@@ -1,5 +1,6 @@
 {
-    "token"  : "token",
-    "prefix" : "!mws ",
-    "sheetUrl" : "https://www.myth-weavers.com/api/v1/sheets/sheets/"
+  "token": "token",
+  "prefix": "!mws ",
+  "sheetUrl": "https://www.myth-weavers.com/api/v1/sheets/sheets/",
+  "apiUrl": "https://www.dnd5eapi.co/api/"
 }
