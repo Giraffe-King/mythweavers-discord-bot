@@ -317,7 +317,7 @@ async function RollSave(args, msg) {
 	if (saveType == 'int') saveType = 'intelligence';
 	if (saveType == 'wis') saveType = 'wisdom';
 	if (saveType == 'cha') saveType = 'charisma';
-	var bonus = characterSheet[saveType + '_save'] || '0';
+	var bonus = characterSheet[saveType + '_save'];
 	if (!bonus) {
 		msg.reply(`Cannot find save "${args[0]}"`)
 	}
@@ -505,7 +505,9 @@ async function ListWeapons(args, msg) {
 
 	var reply = `**${name}**'s weapons are:`
 	weapons.forEach(weapon => {
-		reply += `\n${weapon.slot}: ${weapon.name} - ${weapon.attack} to hit for ${weapon.damage} damage`
+		if (weapon.name) {
+			reply += `\n${weapon.slot}: ${weapon.name} - ${weapon.attack} to hit for ${weapon.damage} damage`;
+		}
 	});
 	msg.reply(reply);
 }
