@@ -234,39 +234,42 @@ async function GetInventory(args, msg) {
 		reply += 'None.'
 	}
 
-	reply += '\n **PP**: ' + +(characterSheet.currency_pp || '0').replace(/,/g, '') + ', **EP**: ' + +(characterSheet.currency_ep || '0').replace(/,/g, '') +
-		', **GP**: ' + +(characterSheet.currency_gp || '0').replace(/,/g, '') + ', **SP**: ' + +(characterSheet.currency_sp || '0').replace(/,/g, '') +
-		', **CP**: ' + +(characterSheet.currency_cp || '0').replace(/,/g, '');
+	reply += `\n **PP**: ${+(characterSheet.currency_pp || '0').replace(/,/g, '')}, **EP**: ${+(characterSheet.currency_ep || '0').replace(/,/g, '')}` +
+		`, **GP**: ${+(characterSheet.currency_gp || '0').replace(/,/g, '')}, **SP**: ${ +(characterSheet.currency_sp || '0').replace(/,/g, '')}` +
+		`, **CP**: ${+(characterSheet.currency_cp || '0').replace(/,/g, '')}`;
 	msg.reply(reply);
 }
 
 async function GetOtherProficiencies(args, msg) {
-	var reply = 'The other things **' + characterSheet.name + '** is proficient in are: ';
+	var reply = `The other things **${characterSheet.name}** is proficient in are: `;
 	var any = false;
+	var others = [];
 	for (var i = 1; i <= 12; i++) {
 		var otherProf = characterSheet['proficiency_' + i];
 		if (otherProf) {
 			any = true;
-			reply += otherProf + ', '
+			others.push(otherProf);
 		}
 	}
 	if (!any) {
 		reply += 'None.'
+	} else {
+		reply += others.join(', ');
 	}
 	msg.reply(reply);
 }
 
 async function GetStats(args, msg) {
-	var reply = '**' + characterSheet.name + '**';
-	reply += '\n*' + characterSheet['alignment'] + ' ' + characterSheet['race'] + '*';
-	reply += '\n **AC:**' + characterSheet['armor_class'] + ' | **HP:** ' + characterSheet['hp'] + '/' + characterSheet['max_hp'] + '| **Speed:** ' + characterSheet['speed'];
-	reply += '\n **STR: ** ' + characterSheet['strength'] + ' [' + characterSheet['strength_mod'] + '] |'
-		+ ' **DEX: ** ' + characterSheet['dexterity'] + ' [' + characterSheet['dexterity_mod'] + '] |'
-		+ ' **CON: ** ' + characterSheet['constitution'] + ' [' + characterSheet['constitution_mod'] + ']';
-	reply += '\n **INT: ** ' + characterSheet['intelligence'] + ' [' + characterSheet['intelligence_mod'] + '] |'
-		+ ' **WIS: ** ' + characterSheet['wisdom'] + ' [' + characterSheet['wisdom_mod'] + '] |'
-		+ ' **CHA: ** ' + characterSheet['charisma'] + ' [' + characterSheet['charisma_mod'] + ']';
-	reply += '\n **Saving throws:** ';
+	var reply = `**${characterSheet.name}**`;
+	reply += `\n*${characterSheet['alignment']} ${characterSheet['race']}*`;
+	reply += `\n**AC:** ${characterSheet['armor_class']} | **HP:** ${characterSheet['hp']}/${characterSheet['max_hp']} | **HD:** ${characterSheet['hit_dice']} | **Speed:** ${characterSheet['speed']}`;
+	reply += `\n**STR: ** ${characterSheet['strength']} [${characterSheet['strength_mod']}] |`
+		+ ` **DEX: ** ${characterSheet['dexterity']} [${characterSheet['dexterity_mod']}] |`
+		+ ` **CON: ** ${characterSheet['constitution']} [${characterSheet['constitution_mod']}]`;
+	reply += `\n**INT: ** ${characterSheet['intelligence']} [${characterSheet['intelligence_mod']}] |`
+		+ ` **WIS: ** ${characterSheet['wisdom']} [${characterSheet['wisdom_mod']}] |`
+		+ ` **CHA: ** ${characterSheet['charisma']} [${characterSheet['charisma_mod']}]`;
+	reply += '\n**Saving throws:** ';
 	for (var attribute in skills) {
 		var bonus = characterSheet[attribute + '_save'];
 		if (!bonus)
@@ -276,13 +279,13 @@ async function GetStats(args, msg) {
 		}
 		reply += attribute.charAt(0).toUpperCase() + attribute.charAt(1).toUpperCase() + attribute.charAt(2).toUpperCase() + ' ' + bonus + ', '
 	}
-	reply += '\n**Passive Perception:** ' + characterSheet['passive_perception'];
+	reply += `**Passive Perception:** ${characterSheet['passive_perception']}`;
 
 	msg.reply(reply);
 }
 
 async function GetLanguages(args, msg) {
-	var reply = '**' + characterSheet.name + '** knows: ';
+	var reply = `**${characterSheet.name}** knows: `;
 	var langs = [];
 	for (var i = 1; i <= 18; i++) {
 		var lang = characterSheet['language_' + i];
@@ -300,7 +303,7 @@ async function RollInit(args, msg) {
 		bonus = '+' + bonus;
 	}
 	var result = await ParseAndRollWrapper('d20' + bonus);
-	msg.reply('**' + characterSheet.name + '** rolled ' + result + ' on initiative.');
+	msg.reply(`**${characterSheet.name}** rolled ${result} on initiative.`);
 }
 
 async function RollSave(args, msg) {
@@ -319,7 +322,7 @@ async function RollSave(args, msg) {
 		bonus = '+' + bonus;
 	}
 	var result = await ParseAndRollWrapper('d20' + bonus);
-	msg.reply('**' + characterSheet.name + '** rolled ' + result + ' on their ' + saveType + ' save.');
+	msg.reply(`**${characterSheet.name}** rolled ${result} on their ${saveType} save.`);
 }
 
 async function ListSkills(args, msg) {
@@ -329,14 +332,14 @@ async function ListSkills(args, msg) {
 			continue;
 		}
 		var skillList = skills[attribute];
-		reply += '\n **' + attribute.charAt(0).toUpperCase() + attribute.slice(1) + '**';
+		reply += `\n**${attribute.charAt(0).toUpperCase() + attribute.slice(1)}**`;
 		skillList.forEach(skill => {
 			var bonus = characterSheet[skill + '_mod'] || '0';
 			if (!bonus.startsWith('-') && !bonus.startsWith('+')) {
 				bonus = '+' + bonus;
 			}
 			skill = skill.split('_').join(' ');
-			reply += '\n' + skill.charAt(0).toUpperCase() + skill.slice(1) + ': ' + bonus;
+			reply += `\n${skill.charAt(0).toUpperCase() + skill.slice(1)}: ${bonus}`;
 		})
 	}
 	msg.reply(reply);
@@ -361,8 +364,7 @@ async function RollSkill(args, msg) {
 	var result = await ParseAndRollWrapper('d20' + bonus);
 
 	skill = skill.split('_').join(' ');
-	var reply = '**' + characterSheet.name + '** rolled ' + result + ' on '
-		+ skill.charAt(0).toUpperCase() + skill.slice(1);
+	var reply = `**${characterSheet.name}** rolled ${result} on ${skill.charAt(0).toUpperCase() + skill.slice(1)}`;
 	msg.reply(reply);
 }
 
@@ -413,8 +415,8 @@ async function WhoAmI(args, msg) {
 async function ListSpells(args, msg) {
 	var reply = '';
 	var spellLevel = args.length > 0 ? parseInt(args[0]) : 10;
-	if (spellLevel == NaN) {
-		msg.reply('Got ' + args[0] + ' as spell level, but I don\'t understand what that means.');
+	if (isNaN(spellLevel)) {
+		msg.reply(`Got ${args[0]} as spell level, but I don't understand what that means.`);
 		return;
 	}
 
