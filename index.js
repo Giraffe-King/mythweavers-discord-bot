@@ -12,6 +12,7 @@ var characterSheet = new Object();
 const skills = {
 	strength: ['athletics'],
 	dexterity: ['acrobatics', 'sleight_of_hand', 'stealth'],
+	constitution: [],
 	intelligence: ['arcana', 'history', 'investigation', 'nature', 'religion'],
 	wisdom: ['animal_handling', 'insight', 'medicine', 'perception', 'survival'],
 	charisma: ['deception', 'intimidation', 'performance', 'persuasion'],
@@ -28,6 +29,7 @@ const knownCommands = [
 	rollsave = '**rollsave** [save] | *rolls the given saving throw*',
 	rollinit = '**rollinit** | *rolls initiative*',
 	languages = '**languages** | *returns known languages*',
+	getstats = '**getstats** | *returns basics stats; attributes, ac, hp, pp*'
 ]
 
 
@@ -104,6 +106,10 @@ client.on('message', async msg => {
 		await GetLanguages(args, msg);
 		return;
 	}
+	if (command === 'getstats') {
+		await GetStats(args, msg);
+		return;
+	}
 });
 
 
@@ -113,7 +119,28 @@ client.on('message', async msg => {
 
 
 
+async function GetStats(args, msg) {
+	var reply = '**' + characterSheet.name + '**';
+	reply += '\n*' + characterSheet['alignment'] + ' ' + characterSheet['race'] + '*';
+	reply += '\n **AC:**' + characterSheet['armor_class'] + ' | **HP:** ' + characterSheet['hp'] + '/' + characterSheet['max_hp'] + '| **Speed:** ' + characterSheet['speed'];
+	reply += '\n **STR: ** ' + characterSheet['strength'] + ' [' + characterSheet['strength_mod'] + '] |'
+		+ ' **DEX: ** ' + characterSheet['dexterity'] + ' [' + characterSheet['dexterity_mod'] + '] |'
+		+ ' **CON: ** ' + characterSheet['constitution'] + ' [' + characterSheet['constitution_mod'] + ']';
+	reply += '\n **INT: ** ' + characterSheet['intelligence'] + ' [' + characterSheet['intelligence_mod'] + '] |'
+		+ ' **WIS: ** ' + characterSheet['wisdom'] + ' [' + characterSheet['wisdom_mod'] + '] |'
+		+ ' **CHA: ** ' + characterSheet['charisma'] + ' [' + characterSheet['charisma_mod'] + ']';
+	reply += '\n **Saving throws:** ';
+	for (var attribute in skills) {
+		var bonus = characterSheet[attribute + '_save'];
+		if (!bonus.startsWith('-')) {
+			bonus = '+' + bonus;
+		}
+		reply += attribute.charAt(0).toUpperCase() + attribute.charAt(1).toUpperCase() + attribute.charAt(2).toUpperCase() + ' ' + bonus + ', '
+	}
+	reply += '\n**Passive Perception:** ' + characterSheet['passive_perception'];
 
+	msg.reply(reply);
+}
 
 async function GetLanguages(args, msg) {
 	var reply = characterSheet.name + ' knows: ';
@@ -127,7 +154,11 @@ async function GetLanguages(args, msg) {
 }
 
 async function RollInit(args, msg) {
-	var result = parseAndRoll('d20+' + characterSheet.initiative).value;
+	var bonus = characterSheet.initiative;
+	if (!bonus.startsWith('-')) {
+		bonus = '+' + bonus;
+	}
+	var result = parseAndRoll('d20' + bonus).value;
 	msg.reply(characterSheet.name + ' rolled ' + result + ' on initiative.');
 }
 
@@ -139,13 +170,20 @@ async function RollSave(args, msg) {
 	if (saveType == 'int') saveType = 'intelligence';
 	if (saveType == 'wis') saveType = 'wisdom';
 	if (saveType == 'cha') saveType = 'charisma';
-	var result = parseAndRoll('d20+' + characterSheet[saveType + '_save']).value;
+	var bonus = characterSheet[saveType + '_save'];
+	if (!bonus.startsWith('-')) {
+		bonus = '+' + bonus;
+	}
+	var result = parseAndRoll('d20' + bonus).value;
 	msg.reply(characterSheet.name + ' rolled ' + result + ' on their ' + saveType + ' save.');
 }
 
 async function ListSkills(args, msg) {
 	var reply = '';
 	for (var attribute in skills) {
+		if (attribute == 'constitution') {
+			continue;
+		}
 		var skillList = skills[attribute];
 		reply += '\n **' + attribute.charAt(0).toUpperCase() + attribute.slice(1) + '**';
 		skillList.forEach(skill => {
@@ -172,9 +210,11 @@ async function RollSkill(args, msg) {
 	if (bonus == undefined) {
 		msg.reply('Could not find skill named ' + skill);
 	}
-	bonus = parseInt(bonus);
+	if (!bonus.startsWith('-')) {
+		bonus = '+' + bonus;
+	}
 
-	var result = parseAndRoll('d20+' + bonus).value;
+	var result = parseAndRoll('d20' + bonus).value;
 
 	skill = skill.split('_').join(' ');
 	var reply = characterSheet.name + ' rolled ' + result + ' on '
@@ -261,41 +301,45 @@ async function SetId(args, msg) {
 }
 
 async function AttackWithWeapon(args, msg) {
-	var name = characterSheet.name;
+	try {
+		var name = characterSheet.name;
 
-	var weaponSlot = parseInt(args[0]);
-	if (weaponSlot == NaN)
-		weaponSlot = 1;
-	weaponSlot--;
-	var weapons = await GetWeapons();
-	var weapon = weapons[weaponSlot];
-	var attackBonus = parseInt(weapon.attack);
-	if (attackBonus == NaN) {
-		msg.reply('Could not parse the bonus to hit, found: ' + weapon.attack);
-		return;
+		var weaponSlot = parseInt(args[0]);
+		if (weaponSlot == NaN)
+			weaponSlot = 1;
+		weaponSlot--;
+		var weapons = await GetWeapons();
+		var weapon = weapons[weaponSlot];
+		var bonus = weapon.attack;
+		if (!bonus.startsWith('-')) {
+			bonus = '+' + bonus;
+		}
+		var attackToHit = parseAndRoll('d20' + bonus);
+		var dmg = parseAndRoll(weapon.damage);
+
+		var reply = name + ' attacks with ' + weapon.name;
+
+		if (attackToHit == null) {
+			reply += ' [' + weapon.attack + ']';
+		}
+
+		reply += ', rolling '
+
+		if (attackToHit != null) {
+			reply += attackToHit.value + ' to hit'
+		}
+		if (attackToHit != null && dmg != null) {
+			reply += ' for '
+		}
+		if (dmg != null) {
+			reply += dmg.value + ' damage'
+		}
+
+		msg.reply(reply + '!');
 	}
-	var attackToHit = parseAndRoll('d20+' + attackBonus).value;
-	var dmg = parseAndRoll(weapon.damage).value;
-
-	var reply = name + ' attacks with ' + weapon.name;
-
-	if (attackToHit == null) {
-		reply += ' [' + weapon.attack + ']';
+	catch {
+		msg.reply('Could not roll an attack for weapon in slot ' + ++weaponSlot + '. Please check the formatting on your sheet.');
 	}
-
-	reply += ', rolling '
-
-	if (attackToHit != null) {
-		reply += attackToHit + ' to hit'
-	}
-	if (attackToHit != null && dmg != null) {
-		reply += ' for '
-	}
-	if (dmg != null) {
-		reply += dmg + ' damage'
-	}
-
-	msg.reply(reply + '!');
 }
 
 async function GetName(args, msg) {
