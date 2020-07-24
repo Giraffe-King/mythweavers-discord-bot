@@ -46,7 +46,7 @@ client.on('ready', () => {
 	//!mws setid 1892900
 });
 
-client.login(process.env.BOT_TOKEN);
+client.login(process.env.CLIENT_TOKEN);
 
 client.on('message', async msg => {
 	try {
