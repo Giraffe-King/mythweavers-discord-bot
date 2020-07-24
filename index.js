@@ -190,7 +190,7 @@ async function GetSpellInfo(args, msg) {
 	else if (spellLevel == 2)
 		spellLevel += 'nd';
 	else if (spellLevel == 3)
-		spellLevel += '3rd';
+		spellLevel += 'rd';
 	else
 		spellLevel += 'th';
 
