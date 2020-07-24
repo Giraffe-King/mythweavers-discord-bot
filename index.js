@@ -237,8 +237,8 @@ async function GetInventory(args, msg) {
 		reply += items.join(', ');
 	}
 
-	reply += `\n **PP**: ${+(characterSheet.currency_pp || '0').replace(/,/g, '')}, **EP**: ${+(characterSheet.currency_ep || '0').replace(/,/g, '')}` +
-		`, **GP**: ${+(characterSheet.currency_gp || '0').replace(/,/g, '')}, **SP**: ${ +(characterSheet.currency_sp || '0').replace(/,/g, '')}` +
+	reply += `\n **PP**: ${+(characterSheet.currency_pp || '0').replace(/,/g, '')}, **GP**: ${+(characterSheet.currency_gp || '0').replace(/,/g, '')}` +
+		`, **EP**: ${+(characterSheet.currency_ep || '0').replace(/,/g, '')}, **SP**: ${ +(characterSheet.currency_sp || '0').replace(/,/g, '')}` +
 		`, **CP**: ${+(characterSheet.currency_cp || '0').replace(/,/g, '')}`;
 	msg.reply(reply);
 }
