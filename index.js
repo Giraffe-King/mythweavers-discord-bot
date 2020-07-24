@@ -455,6 +455,8 @@ async function AttackWithWeapon(args, msg) {
 	try {
 		var name = characterSheet.name;
 
+		if (isNaN(args[0]))
+			args[0] = 1;
 		var weaponSlot = parseInt(args[0]);
 		if (weaponSlot == NaN)
 			weaponSlot = 1;
