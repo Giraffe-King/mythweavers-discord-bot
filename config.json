@@ -1,6 +1,6 @@
 {
-  "token": "token",
-  "prefix": "!mws ",
+  "token": "BOT_TOKEN",
+  "prefix": "!mws",
   "sheetUrl": "https://www.myth-weavers.com/api/v1/sheets/sheets/",
   "apiUrl": "https://www.dnd5eapi.co/api/"
 }
