@@ -1,16 +1,16 @@
 {
 
-  "name": "Example",
+  "name": "Myth-Weavers Discord Bot",
 
-  "description": "Example",
+  "description": "To do",
 
   "version": "0.0.0",
 
-  "main": "bot.js",
+  "main": "index.js",
 
   "scripts": {
 
-    "start": "node bot.js"
+    "start": "node index.js"
 
   },
 
